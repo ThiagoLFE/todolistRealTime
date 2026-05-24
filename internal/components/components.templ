@@ -1,0 +1,21 @@
+package components
+
+templ BasePage() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Realtime Todolist</title>
+			<script type="module" src="static/datastar.js"></script>
+		</head>
+		<body>
+			<div data-signals="{count: 0}">
+				<h1>Counter to test</h1>
+				<button data-on:click="$count--" type="button">Decrement</button>
+				<p data-text="$count"></p>
+				<button data-on:click="$count++" type="button">Increment</button>
+			</div>
+		</body>
+	</html>
+}
