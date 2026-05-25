@@ -1,21 +1,127 @@
 package components
 
-templ BasePage() {
+import (
+	"fmt"
+	"realtime-todolist/internal/todo"
+)
+
+templ BasePage(component templ.Component) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>Realtime Todolist</title>
-			<script type="module" src="static/datastar.js"></script>
+			<script type="module" src="/static/datastar.js"></script>
+			<link
+				rel="stylesheet"
+				href="/static/style.css"
+			/>
 		</head>
 		<body>
-			<div data-signals="{count: 0}">
-				<h1>Counter to test</h1>
-				<button data-on:click="$count--" type="button">Decrement</button>
-				<p data-text="$count"></p>
-				<button data-on:click="$count++" type="button">Increment</button>
+			<div data-init="@get('/events')"></div>
+			<div class="container">
+				<div class="header">
+					<h1 class="title">
+						Realtime Todo
+					</h1>
+					<p class="subtitle">
+						Realtime collaborative task manager
+					</p>
+				</div>
+				@NewForm()
+				<div class="card">
+					@component
+				</div>
 			</div>
 		</body>
 	</html>
+}
+
+templ ErrorMsg(msg string) {
+	<p class="error-message" id="msg_error">
+		{ msg }
+	</p>
+}
+
+type NewTaskForm struct {
+	Form struct {
+		Name string `json:"name"`
+	} `json:"form"`
+}
+
+templ NewForm() {
+	<div
+		class="todo-form"
+		data-signals="{form: {name: ''}}"
+	>
+		<input
+			type="text"
+			data-bind="form.name"
+			class="input"
+			placeholder="Add a new task..."
+		/>
+		<button
+			data-on:click="@post('/task/new'); $form.name = ''"
+			class="button"
+		>
+			Add Task
+		</button>
+		@ErrorMsg("")
+	</div>
+}
+
+templ Table(items []todo.Todo) {
+	<table id="table" class="todo-table">
+		<thead>
+			<tr>
+				<th>Status</th>
+				<th>Task</th>
+				<th>ID</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			for _, t := range items {
+				<tr>
+					<td>
+						<div class="todo-status">
+							<input
+								type="checkbox"
+								class="todo-checkbox"
+								if t.Done {
+									checked
+								}
+								data-on:click={ fmt.Sprintf("@post('/task/%d/toggle')", t.ID) }
+							/>
+						</div>
+					</td>
+					<td>
+						<span
+							class={ map[string]bool{
+								"todo-done": t.Done,
+							} }
+						>
+							{ t.Name }
+						</span>
+					</td>
+					<td>
+						<span class="todo-id">
+							#{ fmt.Sprintf("%d", t.ID) }
+						</span>
+					</td>
+					<td>
+						<div class="todo-actions">
+							<button
+								class="delete-btn"
+								data-on:click={ fmt.Sprintf("@post('/task/%d/delete')", t.ID) }
+							>
+								🗑️
+							</button>
+						</div>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
 }

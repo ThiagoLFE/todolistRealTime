@@ -1,15 +1,27 @@
 package web
 
-import "net/http"
+import (
+	"net/http"
+	"realtime-todolist/internal/sse"
+	"realtime-todolist/internal/todo"
 
-func NewRouter() http.Handler {
+	"github.com/nats-io/nats.go"
+)
+
+func NewRouter(tl *todo.TodoList, nc *nats.Conn, broker *sse.Broker) http.Handler {
+
 	mux := http.NewServeMux()
 
 	// pages
-	mux.HandleFunc("/", basePage)
+	mux.HandleFunc("/", basePage(tl, nc))
+
+	// realtime
+	mux.HandleFunc("/events", EventsHandler(broker))
 
 	// api
-	mux.HandleFunc("POST /todos", basePage)
+	mux.HandleFunc("POST /task/new", createTask(tl, nc))
+	mux.HandleFunc("POST /task/{id}/toggle", toggleTask(tl, nc))
+	mux.HandleFunc("POST /task/{id}/delete", deleteTask(tl, nc))
 
 	// static
 	fs := http.FileServer(http.Dir("../static"))
